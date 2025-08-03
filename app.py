@@ -34,6 +34,45 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+# def process_pdfs_async(task_id, pdf_files):
+#     """异步处理PDF文件"""
+#     try:
+#         processing_status[task_id] = {'status': 'processing', 'progress': 0, 'total': len(pdf_files)}
+#         pdf_results[task_id] = []
+        
+#         for i, pdf_file in enumerate(pdf_files):
+#             try:
+#                 # 处理单个PDF
+#                 pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], pdf_file)
+#                 page_texts = recognize_pdf_text(pdf_path)
+                
+#                 # 保存结果
+#                 result = {
+#                     'filename': pdf_file,
+#                     'pages': page_texts,
+#                     'timestamp': datetime.now().isoformat()
+#                 }
+#                 pdf_results[task_id].append(result)
+                
+#                 # 更新进度
+#                 processing_status[task_id]['progress'] = i + 1
+                
+#             except Exception as e:
+#                 # 记录错误但继续处理其他文件
+#                 error_result = {
+#                     'filename': pdf_file,
+#                     'error': str(e),
+#                     'timestamp': datetime.now().isoformat()
+#                 }
+#                 pdf_results[task_id].append(error_result)
+#                 processing_status[task_id]['progress'] = i + 1
+        
+#         processing_status[task_id]['status'] = 'completed'
+        
+#     except Exception as e:
+#         processing_status[task_id] = {'status': 'error', 'error': str(e)}
+
+
 def process_pdfs_async(task_id, pdf_files):
     """异步处理PDF文件"""
     try:
@@ -54,6 +93,13 @@ def process_pdfs_async(task_id, pdf_files):
                 }
                 pdf_results[task_id].append(result)
                 
+                # OCR处理完成后删除原始PDF文件
+                try:
+                    os.remove(pdf_path)
+                    print(f"已删除处理完成的文件: {pdf_file}")
+                except Exception as e:
+                    print(f"删除文件失败: {pdf_file}, 错误: {e}")
+                
                 # 更新进度
                 processing_status[task_id]['progress'] = i + 1
                 
@@ -66,12 +112,18 @@ def process_pdfs_async(task_id, pdf_files):
                 }
                 pdf_results[task_id].append(error_result)
                 processing_status[task_id]['progress'] = i + 1
+                
+                # 即使处理失败也删除文件
+                try:
+                    pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], pdf_file)
+                    os.remove(pdf_path)
+                except:
+                    pass
         
         processing_status[task_id]['status'] = 'completed'
         
     except Exception as e:
         processing_status[task_id] = {'status': 'error', 'error': str(e)}
-
 
 def call_workflow_api(pdf_content_list):
     print("pdf_content_list:")
@@ -123,6 +175,57 @@ def call_workflow_api(pdf_content_list):
         
     except Exception as e:
         return f"API调用错误: {str(e)}"
+
+
+def call_workflow_api_stream(pdf_content_list):
+    """流式调用workflow API"""
+    print("pdf_content_list:")
+    print(pdf_content_list)
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "text/event-stream",
+        "Authorization": "Bearer 98fb62695047338d32729257a65a48a6:NDNkOTVmZmJjYzc0OTg5MTg5ODI5MDNi",
+    }
+    
+    data = {
+        "flow_id": "7357096384330665986",
+        "uid": "123",
+        "parameters": {
+            "AGENT_USER_INPUT": "请分析以下PDF内容",
+            "pdf_list": pdf_content_list
+        },
+        "ext": {"bot_id": "adjfidjf", "caller": "workflow"},
+        "stream": True,
+    }
+    
+    payload = json.dumps(data)
+    
+    try:
+        conn = http.client.HTTPSConnection("xingchen-api.xf-yun.com", timeout=120)
+        conn.request("POST", "/workflow/v1/chat/completions", payload, headers, encode_chunked=True)
+        res = conn.getresponse()
+        
+        if data.get("stream"):
+            while chunk := res.readline():
+                chunk_str = chunk.decode("utf-8").strip()
+                if chunk_str.startswith("data: "):
+                    json_str = chunk_str[6:]
+                    try:
+                        data_dict = json.loads(json_str)
+                        if "choices" in data_dict and len(data_dict["choices"]) > 0:
+                            choice = data_dict["choices"][0]
+                            if "delta" in choice and "content" in choice["delta"]:
+                                content = choice["delta"]["content"]
+                                print("content:",content)
+                                yield content
+                    except json.JSONDecodeError:
+                        continue
+        
+        conn.close()
+        
+    except Exception as e:
+        yield f"API调用错误: {str(e)}"
 
 
 @app.route('/')
@@ -227,6 +330,57 @@ def analyze_pdfs():
         
     except Exception as e:
         return jsonify({'error': f'分析失败: {str(e)}'}), 500
+
+
+@app.route('/analyze_stream', methods=['POST'])
+def analyze_pdfs_stream():
+    """流式分析PDF内容"""
+    from flask import Response
+    
+    data = request.get_json()
+    task_id = data.get('task_id')
+    k_pages = data.get('k_pages', 5)  # 每K页合并，默认5页
+    
+    if not task_id or task_id not in pdf_results:
+        return jsonify({'error': '无效的任务ID或结果不存在'}), 400
+    
+    def generate():
+        try:
+            # 获取所有PDF的页面内容
+            all_pages = []
+            for pdf_result in pdf_results[task_id]:
+                if 'pages' in pdf_result:
+                    all_pages.extend(pdf_result['pages'])
+            
+            if not all_pages:
+                yield f"data: {json.dumps({'error': '没有找到可分析的内容'})}\n\n"
+                return
+            
+            # 按K页合并内容
+            pdf_content_list = []
+            for i in range(0, len(all_pages), k_pages):
+                chunk = all_pages[i:i + k_pages]
+                combined_content = '\n\n'.join(chunk)
+                pdf_content_list.append(combined_content)
+            
+            # 发送初始信息
+            yield f"data: {json.dumps({'type': 'init', 'chunks_count': len(pdf_content_list), 'k_pages': k_pages})}\n\n"
+            
+            # 调用workflow API并流式传输
+            for content in call_workflow_api_stream(pdf_content_list):
+                if content:
+                    yield f"data: {json.dumps({'type': 'content', 'data': content})}\n\n"
+            
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+    
+    return Response(generate(), mimetype='text/plain', headers={
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no'
+    })
 
 
 @app.route('/results/<task_id>')
