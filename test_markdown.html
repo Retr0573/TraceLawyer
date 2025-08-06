@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 渲染测试</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .test-result {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .system-hint {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            font-weight: 500 !important;
+            border-radius: 15px !important;
+            padding: 0.3em 0.8em !important;
+            display: inline-block !important;
+            margin: 0.2em 0 !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        }
+        
+        h1, h2, h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.3em;
+        }
+        
+        strong {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <h1>Markdown 渲染测试</h1>
+    
+    <h2>原始输出内容：</h2>
+    <pre id="originalContent"></pre>
+    
+    <h2>渲染后的效果：</h2>
+    <div id="renderedContent" class="test-result"></div>
+    
+    <script>
+        // 模拟您的输出内容
+        const testContent = `
+< 系统提示 > : 正在检索知识库...
+
+< 系统提示 > : 正在生成意见书...
+
+# 股东出资合规性专项法律意见书
+
+——抽逃出资风险分析与应对策略
+
+尊敬的客户：
+
+根据您提供的资料及【产品名称】的法律检索，该股东**存在抽逃出资风险，风险抽逃出资概率为85%**。现就股东可能存在的抽逃出资行为出具如下法律意见。本意见书将从法律依据、应重点关注的法律风险提示、认定结果以及法律建议四个方面进行分析，旨在帮助您全面了解相关法律风险并采取适当的法律措施。
+
+## 交易图：
+
+[]
+`;
+
+        // 显示原始内容
+        document.getElementById('originalContent').textContent = testContent;
+        
+        // 处理并渲染内容
+        function processAndRender(content) {
+            let contentToRender = content;
+            
+            // 处理系统提示
+            if (contentToRender.includes('< 系统提示 >')) {
+                contentToRender = contentToRender.replace(
+                    /(< 系统提示 > : [^\n]+)/g, 
+                    '<span class="system-hint">$1</span>'
+                );
+            }
+            
+            try {
+                // 使用 marked 库渲染 Markdown
+                const renderedContent = marked.parse(contentToRender);
+                return renderedContent;
+            } catch (e) {
+                // 如果Markdown解析失败，直接显示原始内容但保持换行
+                return contentToRender.replace(/\n/g, '<br>');
+            }
+        }
+        
+        // 渲染内容
+        const rendered = processAndRender(testContent);
+        document.getElementById('renderedContent').innerHTML = rendered;
+    </script>
+</body>
+</html>

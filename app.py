@@ -8,30 +8,116 @@ from utils.ocr_service import recognize_pdf_text
 import threading
 from datetime import datetime
 import uuid
+from docx import Document
+from docx.shared import Inches
+import re
 
 app = Flask(__name__)
 
 # 配置
 UPLOAD_FOLDER = 'uploads'
 RESULTS_FOLDER = 'results'
+DOWNLOADS_FOLDER = 'downloads'
 ALLOWED_EXTENSIONS = {'pdf'}
 
 # 确保文件夹存在
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
+os.makedirs(DOWNLOADS_FOLDER, exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULTS_FOLDER'] = RESULTS_FOLDER
+app.config['DOWNLOADS_FOLDER'] = DOWNLOADS_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 16MB max file size
 
 # 存储处理状态和结果
 processing_status = {}
 pdf_results = {}
+analysis_results = {}  # 新增：存储分析结果
 
 
 def allowed_file(filename):
     """检查文件扩展名是否允许"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def generate_word_document(content, task_id):
+    """将分析结果生成Word文档"""
+    try:
+        # 创建新文档
+        doc = Document()
+        
+        # 设置文档标题
+        title = doc.add_heading('法律意见书', 0)
+        title.alignment = 1  # 居中对齐
+        
+        # 添加生成时间
+        time_paragraph = doc.add_paragraph(f'生成时间：{datetime.now().strftime("%Y年%m月%d日 %H:%M")}')
+        time_paragraph.alignment = 1  # 居中对齐
+        
+        # 添加空行
+        doc.add_paragraph('')
+        
+        # 查找"最终法律意见书⬇️"标记，只处理该标记之后的内容
+        opinion_content = content
+        markers = ["最终法律意见书⬇️", "最终法律意见书⬇", "最终法律意见书↓", "最终法律意见书"]
+        
+        for marker in markers:
+            if marker in content:
+                # 找到标记位置，提取标记之后的内容
+                marker_index = content.find(marker)
+                if marker_index != -1:
+                    # 从标记后开始提取内容
+                    opinion_content = content[marker_index + len(marker):].strip()
+                    print(f"找到标记: {marker}，提取意见书内容")
+                    break
+        
+        if opinion_content == content:
+            print("未找到'最终法律意见书'标记，使用全部内容")
+        
+        # 处理内容，将content按行分割并格式化
+        lines = opinion_content.split('\n')
+        current_paragraph = None
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                if current_paragraph:
+                    current_paragraph = None
+                continue
+                
+            # 检查是否是标题（包含#号或特定关键词）
+            if (line.startswith('#') or 
+                '意见书' in line or 
+                '专项法律' in line or
+                line.endswith('：') or
+                '风险分析' in line or
+                '应对策略' in line or
+                '结论' in line or
+                '建议' in line):
+                # 添加标题
+                if line.startswith('#'):
+                    line = line.lstrip('#').strip()
+                heading_level = 1 if ('意见书' in line or '专项法律' in line) else 2
+                doc.add_heading(line, heading_level)
+                current_paragraph = None
+            else:
+                # 添加正文段落
+                if current_paragraph is None:
+                    current_paragraph = doc.add_paragraph(line)
+                else:
+                    current_paragraph.add_run('\n' + line)
+        
+        # 保存文档
+        filename = f"法律意见书_{task_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+        file_path = os.path.join(app.config['DOWNLOADS_FOLDER'], filename)
+        doc.save(file_path)
+        
+        return filename, file_path
+        
+    except Exception as e:
+        print(f"生成Word文档失败: {e}")
+        return None, None
 
 
 # def process_pdfs_async(task_id, pdf_files):
@@ -136,7 +222,7 @@ def call_workflow_api(pdf_content_list):
     }
     
     data = {
-        "flow_id": "7357096384330665986",
+        "flow_id": "7358700018745618434",
         "uid": "123",
         "parameters": {
             "AGENT_USER_INPUT": "请分析以下PDF内容",
@@ -149,7 +235,7 @@ def call_workflow_api(pdf_content_list):
     payload = json.dumps(data)
     
     try:
-        conn = http.client.HTTPSConnection("xingchen-api.xf-yun.com", timeout=120)
+        conn = http.client.HTTPSConnection("xingchen-api.xf-yun.com", timeout=300)
         conn.request("POST", "/workflow/v1/chat/completions", payload, headers, encode_chunked=True)
         res = conn.getresponse()
         
@@ -189,7 +275,7 @@ def call_workflow_api_stream(pdf_content_list):
     }
     
     data = {
-        "flow_id": "7357096384330665986",
+        "flow_id": "7358700018745618434",
         "uid": "123",
         "parameters": {
             "AGENT_USER_INPUT": "请分析以下PDF内容",
@@ -202,7 +288,7 @@ def call_workflow_api_stream(pdf_content_list):
     payload = json.dumps(data)
     
     try:
-        conn = http.client.HTTPSConnection("xingchen-api.xf-yun.com", timeout=120)
+        conn = http.client.HTTPSConnection("xingchen-api.xf-yun.com", timeout=320)
         conn.request("POST", "/workflow/v1/chat/completions", payload, headers, encode_chunked=True)
         res = conn.getresponse()
         
@@ -217,6 +303,8 @@ def call_workflow_api_stream(pdf_content_list):
                             choice = data_dict["choices"][0]
                             if "delta" in choice and "content" in choice["delta"]:
                                 content = choice["delta"]["content"]
+                                if content.startswith("正在"):
+                                    content = f"\n【系统提示】{content}\n"
                                 print("content:",content)
                                 yield content
                     except json.JSONDecodeError:
@@ -250,7 +338,8 @@ def upload_files():
     
     for file in files:
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
+            # filename = secure_filename(file.filename)
+            filename = file.filename
             # 添加时间戳避免文件名冲突
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"{timestamp}_{filename}"
@@ -321,12 +410,33 @@ def analyze_pdfs():
         # 调用workflow API
         api_response = call_workflow_api(pdf_content_list)
         
-        return jsonify({
+        # 保存分析结果
+        analysis_results[task_id] = {
+            'content': api_response,
+            'timestamp': datetime.now().isoformat(),
+            'chunks_count': len(pdf_content_list),
+            'k_pages': k_pages
+        }
+        
+        # 生成Word文档
+        doc_filename, doc_filepath = generate_word_document(api_response, task_id)
+        
+        response_data = {
             'success': True,
             'chunks_count': len(pdf_content_list),
             'k_pages': k_pages,
             'analysis_result': api_response
-        })
+        }
+        
+        # 如果Word文档生成成功，添加下载链接
+        if doc_filename:
+            response_data['word_document'] = {
+                'filename': doc_filename,
+                'download_url': f'/download/{task_id}'
+            }
+            analysis_results[task_id]['word_filename'] = doc_filename
+        
+        return jsonify(response_data)
         
     except Exception as e:
         return jsonify({'error': f'分析失败: {str(e)}'}), 500
@@ -366,10 +476,33 @@ def analyze_pdfs_stream():
             # 发送初始信息
             yield f"data: {json.dumps({'type': 'init', 'chunks_count': len(pdf_content_list), 'k_pages': k_pages})}\n\n"
             
+            # 收集完整的分析结果
+            full_response = []
+            
             # 调用workflow API并流式传输
             for content in call_workflow_api_stream(pdf_content_list):
                 if content:
+                    full_response.append(content)
                     yield f"data: {json.dumps({'type': 'content', 'data': content})}\n\n"
+            
+            # 分析完成后生成Word文档
+            if full_response:
+                complete_response = ''.join(full_response)
+                
+                # 保存分析结果
+                analysis_results[task_id] = {
+                    'content': complete_response,
+                    'timestamp': datetime.now().isoformat(),
+                    'chunks_count': len(pdf_content_list),
+                    'k_pages': k_pages
+                }
+                
+                # 生成Word文档
+                doc_filename, doc_filepath = generate_word_document(complete_response, task_id)
+                
+                if doc_filename:
+                    analysis_results[task_id]['word_filename'] = doc_filename
+                    yield f"data: {json.dumps({'type': 'word_generated', 'filename': doc_filename, 'download_url': f'/download/{task_id}'})}\n\n"
             
             yield f"data: {json.dumps({'type': 'done'})}\n\n"
             
@@ -390,6 +523,52 @@ def get_results(task_id):
         return jsonify({'error': '结果不存在'}), 404
     
     return jsonify(pdf_results[task_id])
+
+
+@app.route('/download/<task_id>')
+def download_word(task_id):
+    """下载Word文档"""
+    if task_id not in analysis_results:
+        return jsonify({'error': '分析结果不存在'}), 404
+    
+    result = analysis_results[task_id]
+    if 'word_filename' not in result:
+        return jsonify({'error': 'Word文档未生成'}), 404
+    
+    filename = result['word_filename']
+    
+    try:
+        return send_from_directory(
+            app.config['DOWNLOADS_FOLDER'], 
+            filename, 
+            as_attachment=True,
+            download_name=filename
+        )
+    except FileNotFoundError:
+        return jsonify({'error': '文件不存在'}), 404
+
+
+@app.route('/analysis_info/<task_id>')
+def get_analysis_info(task_id):
+    """获取分析结果信息"""
+    if task_id not in analysis_results:
+        return jsonify({'error': '分析结果不存在'}), 404
+    
+    result = analysis_results[task_id]
+    response_data = {
+        'timestamp': result['timestamp'],
+        'chunks_count': result['chunks_count'],
+        'k_pages': result['k_pages'],
+        'has_word_document': 'word_filename' in result
+    }
+    
+    if 'word_filename' in result:
+        response_data['word_document'] = {
+            'filename': result['word_filename'],
+            'download_url': f'/download/{task_id}'
+        }
+    
+    return jsonify(response_data)
 
 
 @app.errorhandler(413)

@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TraceLawyer</title>
+    <!-- 引入 marked.js 用于 Markdown 渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -34,7 +37,7 @@
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .header p {
@@ -47,7 +50,7 @@
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
         }
 
@@ -108,7 +111,7 @@
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         .btn:disabled {
@@ -240,10 +243,122 @@
             margin-top: 15px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            white-space: pre-wrap;
             word-wrap: break-word;
             max-height: 500px;
             overflow-y: auto;
+        }
+
+        /* Markdown 样式 */
+        .analysis-result h1,
+        .analysis-result h2,
+        .analysis-result h3,
+        .analysis-result h4,
+        .analysis-result h5,
+        .analysis-result h6 {
+            color: #2c3e50;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            line-height: 1.2;
+        }
+
+        .analysis-result h1 {
+            font-size: 2em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.3em;
+        }
+
+        .analysis-result h2 {
+            font-size: 1.5em;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.3em;
+        }
+
+        .analysis-result h3 {
+            font-size: 1.25em;
+            color: #667eea;
+        }
+
+        .analysis-result p {
+            margin-bottom: 1em;
+            line-height: 1.6;
+        }
+
+        .analysis-result strong {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .analysis-result em {
+            color: #8e44ad;
+            font-style: italic;
+        }
+
+        .analysis-result ul,
+        .analysis-result ol {
+            margin: 1em 0;
+            padding-left: 2em;
+        }
+
+        .analysis-result li {
+            margin-bottom: 0.5em;
+        }
+
+        .analysis-result code {
+            background: #f1f2f6;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+
+        /* 系统提示的特殊样式 */
+        .system-hint {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            font-weight: 500 !important;
+            border-radius: 15px !important;
+            padding: 0.3em 0.8em !important;
+            display: inline-block !important;
+            margin: 0.2em 0 !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        }
+
+        .analysis-result pre {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 1em;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+
+        .analysis-result blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1em;
+            margin: 1em 0;
+            color: #666;
+            background: #f9f9f9;
+            padding: 0.5em 1em;
+            border-radius: 0 5px 5px 0;
+        }
+
+        .analysis-result table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+        }
+
+        .analysis-result th,
+        .analysis-result td {
+            border: 1px solid #ddd;
+            padding: 0.5em;
+            text-align: left;
+        }
+
+        .analysis-result th {
+            background: #667eea;
+            color: white;
         }
 
         #streamResult {
@@ -252,26 +367,97 @@
             border-radius: 8px;
             padding: 15px;
             background: linear-gradient(145deg, #f8fff8, #f0f8f0);
-            font-family: 'Courier New', monospace;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             animation: pulse-border 2s infinite;
+            line-height: 1.6;
+        }
+
+        /* 流式结果的 Markdown 样式 */
+        #streamResult h1,
+        #streamResult h2,
+        #streamResult h3,
+        #streamResult h4,
+        #streamResult h5,
+        #streamResult h6 {
+            color: #2c3e50;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            line-height: 1.2;
+        }
+
+        #streamResult h1 {
+            font-size: 2em;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 0.3em;
+        }
+
+        #streamResult h2 {
+            font-size: 1.5em;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.3em;
+        }
+
+        #streamResult h3 {
+            font-size: 1.25em;
+            color: #28a745;
+        }
+
+        #streamResult p {
+            margin-bottom: 1em;
+            line-height: 1.6;
+        }
+
+        #streamResult strong {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        #streamResult em {
+            color: #8e44ad;
+            font-style: italic;
+        }
+
+        #streamResult ul,
+        #streamResult ol {
+            margin: 1em 0;
+            padding-left: 2em;
+        }
+
+        #streamResult li {
+            margin-bottom: 0.5em;
+        }
+
+        #streamResult code {
+            background: #f1f2f6;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+
+        #streamResult blockquote {
+            border-left: 4px solid #28a745;
+            padding-left: 1em;
+            margin: 1em 0;
+            color: #666;
+            background: #f9f9f9;
+            padding: 0.5em 1em;
+            border-radius: 0 5px 5px 0;
         }
 
         @keyframes pulse-border {
-            0% { border-color: #28a745; }
-            50% { border-color: #20c997; }
-            100% { border-color: #28a745; }
-        }
+            0% {
+                border-color: #28a745;
+            }
 
-        .analysis-result {
-            background: #e8f5e8;
-            border: 1px solid #c3e6c3;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            white-space: pre-wrap;
-            font-family: 'Courier New', monospace;
-            max-height: 400px;
-            overflow-y: auto;
+            50% {
+                border-color: #20c997;
+            }
+
+            100% {
+                border-color: #28a745;
+            }
         }
 
         .loading {
@@ -286,8 +472,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .section-title {
@@ -324,6 +515,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -340,9 +532,9 @@
                 <div style="color: #999; font-size: 0.9rem;">支持多个PDF文件同时上传，单个文件最大为50MB</div>
                 <input type="file" id="fileInput" class="file-input" multiple accept=".pdf">
             </div>
-            
+
             <div id="selectedFiles" class="file-list"></div>
-            
+
             <div style="text-align: center; margin-top: 20px;">
                 <button id="uploadBtn" class="btn" disabled>
                     <span id="uploadBtnText">开始上传和OCR识别</span>
@@ -370,7 +562,8 @@
         <div class="card analysis-section" id="analysisCard">
             <div class="section-title">🤖 AI分析</div>
             <div style="margin-bottom: 20px;">
-                <label>每 <input type="number" id="kPagesInput" class="k-pages-input" value="5" min="1" max="50"> 页内容合并为一个分析单元</label>
+                <label>每 <input type="number" id="kPagesInput" class="k-pages-input" value="5" min="1" max="50">
+                    页内容合并为一个分析单元</label>
             </div>
             <div style="text-align: center; margin-bottom: 20px;">
                 <button id="analyzeBtn" class="btn" style="margin-right: 10px;">
@@ -480,7 +673,7 @@
                 });
 
                 const result = await response.json();
-                
+
                 if (response.ok) {
                     currentTaskId = result.task_id;
                     showAlert('success', `开始处理 ${result.files.length} 个PDF文件`);
@@ -528,7 +721,7 @@
             results.forEach(result => {
                 const resultDiv = document.createElement('div');
                 resultDiv.className = 'pdf-result';
-                
+
                 if (result.error) {
                     resultDiv.innerHTML = `
                         <div class="pdf-title" style="color: #dc3545;">❌ ${result.filename} (处理失败)</div>
@@ -542,7 +735,7 @@
                         `).join('')}
                     `;
                 }
-                
+
                 ocrResults.appendChild(resultDiv);
             });
 
@@ -572,14 +765,44 @@
                 });
 
                 const result = await response.json();
-                
+
                 if (response.ok) {
-                    analysisResult.innerHTML = `
+                    // 处理系统提示，避免被Markdown错误解析
+                    let contentToRender = result.analysis_result;
+                    if (contentToRender.includes('【系统提示】')) {
+                        contentToRender = contentToRender.replace(
+                            /(【系统提示】[^\n]+)/g, 
+                            '<span class="system-hint">$1</span>'
+                        );
+                    }
+                    
+                    // 使用 marked 库渲染 Markdown
+                    const renderedResult = marked.parse(contentToRender);
+                    let resultHTML = `
                         <div class="alert alert-info">
                             📊 分析完成！共分析了 ${result.chunks_count} 个内容块（每 ${result.k_pages} 页为一块）
                         </div>
-                        <div class="analysis-result">${result.analysis_result}</div>
+                        <div class="analysis-result">${renderedResult}</div>
                     `;
+                    
+                    // 如果有Word文档，添加下载链接
+                    if (result.word_document) {
+                        resultHTML += `
+                            <div class="download-section">
+                                <div class="alert alert-info">
+                                    📄 Word文档已生成！
+                                    <a href="${result.word_document.download_url}" 
+                                       download="${result.word_document.filename}"
+                                       class="download-btn"
+                                       style="margin-left: 10px; padding: 5px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-size: 14px;">
+                                       📥 下载意见书 (.docx)
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    analysisResult.innerHTML = resultHTML;
                     showAlert('success', 'AI分析完成！');
                 } else {
                     showAlert('error', result.error || '分析失败');
@@ -639,14 +862,38 @@
                         if (line.startsWith('data: ')) {
                             try {
                                 const data = JSON.parse(line.slice(6));
-                                
+
                                 if (data.type === 'init') {
                                     analysisResult.querySelector('.alert').innerHTML = `
                                         📊 流式分析开始！共 ${data.chunks_count} 个内容块（每 ${data.k_pages} 页为一块）
                                     `;
                                 } else if (data.type === 'content') {
                                     accumulatedContent += data.data;
-                                    streamResult.innerHTML = accumulatedContent;
+                                    
+                                    // 为了避免不完整的Markdown导致格式错误，我们需要特殊处理
+                                    let contentToRender = accumulatedContent;
+                                    
+                                    // 检查是否有系统提示，如果有，保持其原始格式
+                                    if (contentToRender.includes('【系统提示】')) {
+                                        // 将系统提示包装在span中而不是代码块
+                                        contentToRender = contentToRender.replace(
+                                            /(【系统提示】[^\n]+)/g, 
+                                            '<span class="system-hint">$1</span>'
+                                        );
+                                    }
+                                    
+                                    // 确保换行符被正确处理，但不要重复换行
+                                    contentToRender = contentToRender.replace(/\n\n+/g, '\n\n');
+                                    
+                                    try {
+                                        // 使用 marked 库渲染 Markdown
+                                        const renderedContent = marked.parse(contentToRender);
+                                        streamResult.innerHTML = renderedContent;
+                                    } catch (e) {
+                                        // 如果Markdown解析失败，直接显示原始内容但保持换行
+                                        streamResult.innerHTML = contentToRender.replace(/\n/g, '<br>');
+                                    }
+                                    
                                     // 自动滚动到最新内容
                                     streamResult.scrollTop = streamResult.scrollHeight;
                                 } else if (data.type === 'done') {
@@ -654,6 +901,23 @@
                                         ✅ 流式分析完成！
                                     `;
                                     showAlert('success', '流式AI分析完成！');
+                                } else if (data.type === 'word_generated') {
+                                    // 显示Word文档下载链接
+                                    const downloadSection = document.createElement('div');
+                                    downloadSection.className = 'download-section';
+                                    downloadSection.innerHTML = `
+                                        <div class="alert alert-info">
+                                            📄 Word文档已生成！
+                                            <a href="${data.download_url}" 
+                                               download="${data.filename}"
+                                               class="download-btn"
+                                               style="margin-left: 10px; padding: 5px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-size: 14px;">
+                                               📥 下载意见书 (.docx)
+                                            </a>
+                                        </div>
+                                    `;
+                                    analysisResult.appendChild(downloadSection);
+                                    showAlert('success', 'Word文档已生成，可以下载了！');
                                 } else if (data.type === 'error') {
                                     showAlert('error', '分析失败: ' + data.error);
                                 }
@@ -676,13 +940,14 @@
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type}`;
             alertDiv.textContent = message;
-            
+
             document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.card'));
-            
+
             setTimeout(() => {
                 alertDiv.remove();
             }, 5000);
         }
     </script>
 </body>
+
 </html>
