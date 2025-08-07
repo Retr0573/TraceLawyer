@@ -28,7 +28,7 @@ os.makedirs(DOWNLOADS_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULTS_FOLDER'] = RESULTS_FOLDER
 app.config['DOWNLOADS_FOLDER'] = DOWNLOADS_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # max file size
 
 # 存储处理状态和结果
 processing_status = {}
@@ -580,7 +580,7 @@ def get_analysis_info(task_id):
 
 @app.errorhandler(413)
 def too_large(e):
-    return jsonify({'error': '文件太大，请选择小于50MB的文件'}), 413
+    return jsonify({'error': '文件太大，请选择小于500MB的文件'}), 413
 
 
 if __name__ == '__main__':

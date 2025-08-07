@@ -1,0 +1,42 @@
+# 忽略 PDF 文件
+*.pdf
+
+# 忽略 DOCX 文件
+*.docx
+
+# 忽略 Python 缓存文件
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# 忽略临时文件
+*.tmp
+*.temp
+.DS_Store
+
+# 忽略日志文件
+*.log
+
+# 忽略环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 忽略 IDE 配置文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 忽略测试结果和临时目录
+test_results/
+temp_images/
+downloads/
+uploads/
+
+# 忽略其他常见的不需要版本控制的文件
+*.bak
+*.orig
+*.rej
