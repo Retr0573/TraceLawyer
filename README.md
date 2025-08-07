@@ -51,7 +51,7 @@ python3 app.py
 
 ### 3. 访问应用
 
-打开浏览器访问: http://localhost:5000
+打开浏览器访问: http://localhost:5050
 
 ## 使用流程
 
