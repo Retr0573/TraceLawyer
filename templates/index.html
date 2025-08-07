@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TraceLawyer</title>
+    <!-- 设置网页图标 -->
+    <link rel="icon" type="image/jpeg" href="/static/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/static/logo.jpg">
     <!-- 引入 marked.js 用于 Markdown 渲染 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -32,6 +35,21 @@
             text-align: center;
             color: white;
             margin-bottom: 30px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            height: 60px;
+            width: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .header h1 {
@@ -513,13 +531,33 @@
             border: 1px solid #bee5eb;
             color: #0c5460;
         }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .logo {
+                height: 50px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+                margin-bottom: 5px;
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <div class="header">
-            <h1>📄 TraceLawyer</h1>
+            <div class="header-content">
+                <img src="/static/logo.jpg" alt="TraceLawyer Logo" class="logo" onerror="this.style.display='none'">
+                <h1>TraceLawyer</h1>
+            </div>
             <p>上传PDF文件，自动识别文字内容，并使用AI进行智能分析</p>
         </div>
 

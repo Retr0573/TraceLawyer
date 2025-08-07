@@ -322,6 +322,13 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/static/logo.jpg')
+def serve_logo():
+    """提供logo图片"""
+    
+    return send_from_directory('.', 'static/logo.jpg')
+
+
 @app.route('/upload', methods=['POST'])
 def upload_files():
     """上传PDF文件"""
