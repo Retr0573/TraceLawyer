@@ -318,7 +318,19 @@ def call_workflow_api_stream(pdf_content_list):
 
 @app.route('/')
 def index():
-    """主页"""
+    """PDF分析页面"""
+    return render_template('analysis.html')
+
+
+@app.route('/dashboard')
+def dashboard():
+    """系统主控台页面"""
+    return render_template('dashboard.html')
+
+
+@app.route('/original')
+def original_index():
+    """原始分析页面"""
     return render_template('index.html')
 
 

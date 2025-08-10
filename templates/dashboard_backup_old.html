@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TraceLawyer - 智能法律分析系统控制台</title>
+    <link rel="icon" type="image/jpeg" href="/static/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/static/logo.jpg">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .logo {
+            height: 80px;
+            width: auto;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3);
+        }
+
+        .nav-btn.secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        .nav-btn.secondary:hover {
+            box-shadow: 0 10px 25px rgba(149, 165, 166, 0.3);
+        }
+
+        .features {
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: #3498db;
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+
+        .feature-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .feature-desc {
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+
+        .status-info {
+            background: #e8f5e8;
+            border: 1px solid #27ae60;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .status-info h3 {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+
+        .status-info p {
+            color: #2c3e50;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .nav-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="/static/logo.jpg" alt="Logo" class="logo">
+            <h1>智能法律分析系统</h1>
+            <p class="subtitle">基于AI的股东出资抽逃智能识别与风险分析平台</p>
+            
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn">开始PDF分析</a>
+                <a href="/original" class="nav-btn secondary">原始版本</a>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">📄</div>
+                <h3 class="feature-title">智能PDF分析</h3>
+                <p class="feature-desc">
+                    上传PDF文档，系统自动进行OCR识别和智能分析，
+                    快速识别股东出资抽逃相关风险点。
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3 class="feature-title">AI驱动分析</h3>
+                <p class="feature-desc">
+                    采用先进的人工智能算法，结合法律专业知识，
+                    提供准确的风险评估和专业建议。
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📋</div>
+                <h3 class="feature-title">自动生成报告</h3>
+                <p class="feature-desc">
+                    系统自动生成专业的法律意见书，
+                    支持Word格式下载，节省大量人工时间。
+                </p>
+            </div>
+        </div>
+
+        <div class="status-info">
+            <h3>系统状态</h3>
+            <p>✅ 系统运行正常 | 📊 已处理文档: 1,247+ | 🎯 识别准确率: 95.8%</p>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能法律分析系统 - 主控台</title>
+    <link rel="icon" type="image/jpeg" href="/static/logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="/static/logo.jpg">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* 顶部导航栏 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            transition: padding-left 0.3s ease;
+        }
+
+        .navbar.sidebar-expanded {
+            padding-left: 280px;
+        }
+
+        .navbar.sidebar-collapsed {
+            padding-left: 70px;
+        }
+
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            height: 40px;
+            width: auto;
+            border-radius: 8px;
+        }
+
+        .brand-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-item a {
+            text-decoration: none;
+            color: #34495e;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-item a:hover {
+            color: #3498db;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            top: 90px;
+            right: -15px;
+            width: 30px;
+            height: 30px;
+            background: #3498db;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .sidebar-toggle:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+
+        .sidebar-header {
+            padding: 100px 20px 30px;
+            border-bottom: 1px solid rgba(52, 152, 219, 0.2);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-header {
+            padding: 100px 10px 20px;
+        }
+
+        .sidebar-logo {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-logo {
+            width: 40px;
+            height: 40px;
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            opacity: 1;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .sidebar-title {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            opacity: 1;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-subtitle {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 20px 0;
+            margin: 0;
+        }
+
+        .sidebar-item {
+            margin-bottom: 2px;
+            position: relative;
+        }
+
+        .sidebar-item a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: #34495e;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed .sidebar-item a {
+            justify-content: center;
+            padding: 15px 10px;
+        }
+
+        .sidebar-item a:hover,
+        .sidebar-item.active a {
+            background: rgba(52, 152, 219, 0.1);
+            border-left-color: #3498db;
+            color: #2c3e50;
+        }
+
+        .sidebar-item a::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(52, 152, 219, 0.05), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-item a:hover::after {
+            transform: translateX(0);
+        }
+
+        .sidebar-item i {
+            font-size: 1.2rem;
+            width: 20px;
+            text-align: center;
+            color: #3498db;
+            flex-shrink: 0;
+        }
+
+        .sidebar-item span {
+            opacity: 1;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .sidebar-item span {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        /* Tooltip for collapsed sidebar */
+        .sidebar-item .tooltip {
+            position: absolute;
+            left: 80px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #2c3e50;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-item .tooltip::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -5px;
+            transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-right-color: #2c3e50;
+        }
+
+        .sidebar.collapsed .sidebar-item:hover .tooltip {
+            opacity: 1;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            margin-left: 280px;
+            margin-top: 80px;
+            padding: 40px;
+            min-height: calc(100vh - 80px);
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.sidebar-collapsed {
+            margin-left: 70px;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+        }
+
+        .dashboard-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .dashboard-subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        /* 系统统计 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3498db, transparent);
+            transition: left 0.5s ease;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #3498db;
+        }
+
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .stat-trend {
+            font-size: 0.9rem;
+            margin-top: 10px;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .stat-trend.up {
+            background: rgba(39, 174, 96, 0.1);
+            color: #27ae60;
+        }
+
+        .stat-trend.down {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+        }
+
+        /* 功能模块 */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .module-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .module-header {
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+        }
+
+        .module-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .module-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .module-status {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .module-body {
+            padding: 25px;
+        }
+
+        .module-description {
+            color: #7f8c8d;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .module-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(52, 152, 219, 0.1);
+            color: #3498db;
+            border: 2px solid #3498db;
+        }
+
+        .btn-secondary:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .sidebar.collapsed {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .main-content.sidebar-collapsed {
+                margin-left: 0;
+            }
+
+            .navbar {
+                padding-left: 0 !important;
+            }
+
+            .dashboard-title {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card,
+        .module-card {
+            animation: slideIn 0.6s ease forwards;
+        }
+
+        .stat-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .stat-card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .stat-card:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        .module-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .module-card:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-content">
+            <div class="logo-section">
+                <img src="/static/logo.jpg" alt="Logo" class="logo">
+                <span class="brand-title">TraceLawyer</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="/dashboard">主控台</a></li>
+                <li class="nav-item"><a href="/">PDF分析</a></li>
+                <li class="nav-item"><a href="#help">使用帮助</a></li>
+                <li class="nav-item"><a href="#contact">技术支持</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 可折叠侧边栏 -->
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-left" id="toggleIcon"></i>
+        </button>
+
+        <div class="sidebar-header">
+            <img src="/static/logo.jpg" alt="Logo" class="sidebar-logo">
+            <div class="sidebar-title">控制中心</div>
+            <div class="sidebar-subtitle">系统管理</div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <div class="sidebar-item active">
+                <a href="/dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>主控台</span>
+                    <div class="tooltip">主控台</div>
+                </a>
+            </div>
+            <div class="sidebar-item">
+                <a href="/">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>PDF分析</span>
+                    <div class="tooltip">PDF分析</div>
+                </a>
+            </div>
+            <div class="sidebar-item">
+                <a href="/original">
+                    <i class="fas fa-history"></i>
+                    <span>原始版本</span>
+                    <div class="tooltip">原始版本</div>
+                </a>
+            </div>
+            <div class="sidebar-item">
+                <a href="#reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>分析报告</span>
+                    <div class="tooltip">分析报告</div>
+                </a>
+            </div>
+            <div class="sidebar-item">
+                <a href="#batch">
+                    <i class="fas fa-layer-group"></i>
+                    <span>批量处理</span>
+                    <div class="tooltip">批量处理</div>
+                </a>
+            </div>
+            <div class="sidebar-item">
+                <a href="#templates">
+                    <i class="fas fa-file-contract"></i>
+                    <span>模板管理</span>
+                    <div class="tooltip">模板管理</div>
+                </a>
+            </div>
+            <div class="sidebar-item">
+                <a href="#settings">
+                    <i class="fas fa-cog"></i>
+                    <span>系统设置</span>
+                    <div class="tooltip">系统设置</div>
+                </a>
+            </div>
+            <div class="sidebar-item">
+                <a href="#help">
+                    <i class="fas fa-question-circle"></i>
+                    <span>帮助中心</span>
+                    <div class="tooltip">帮助中心</div>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- 主内容区域 -->
+    <main class="main-content" id="mainContent">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">智能法律分析系统</h1>
+            <p class="dashboard-subtitle">专业的股东出资抽逃风险识别与法律分析平台</p>
+        </div>
+
+        <!-- 系统统计 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <div class="stat-number" id="processedFiles">1,247</div>
+                <div class="stat-label">已处理文档</div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i> +12.5%
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="stat-number">96.8%</div>
+                <div class="stat-label">AI识别准确率</div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i> +1.2%
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-number" id="activeUsers">156</div>
+                <div class="stat-label">活跃用户</div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i> +8.3%
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-number">99.9%</div>
+                <div class="stat-label">系统可用性</div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i> +0.1%
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能模块 -->
+        <div class="modules-grid">
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-search-plus"></i>
+                    </div>
+                    <div class="module-title">智能PDF分析</div>
+                    <div class="module-status">● 运行中</div>
+                </div>
+                <div class="module-body">
+                    <p class="module-description">
+                        采用先进的OCR技术和AI算法，智能识别PDF文档中的关键信息，
+                        精准分析股东出资抽逃风险，自动生成专业法律意见书。
+                    </p>
+                    <div class="module-actions">
+                        <a href="/" class="btn btn-primary">
+                            <i class="fas fa-play"></i> 开始分析
+                        </a>
+                        <a href="#" class="btn btn-secondary">
+                            <i class="fas fa-chart-line"></i> 查看报告
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="module-title">批量处理中心</div>
+                    <div class="module-status">● 待升级</div>
+                </div>
+                <div class="module-body">
+                    <p class="module-description">
+                        支持大批量PDF文档的并行处理，提供队列管理、进度监控、
+                        结果汇总等功能，大幅提升工作效率。
+                    </p>
+                    <div class="module-actions">
+                        <a href="#" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> 批量上传
+                        </a>
+                        <a href="#" class="btn btn-secondary">
+                            <i class="fas fa-list"></i> 处理队列
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <div class="module-title">模板管理系统</div>
+                    <div class="module-status">● 开发中</div>
+                </div>
+                <div class="module-body">
+                    <p class="module-description">
+                        自定义法律意见书模板，支持多种格式输出，
+                        满足不同客户和场景的专业需求。
+                    </p>
+                    <div class="module-actions">
+                        <a href="#" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> 模板编辑
+                        </a>
+                        <a href="#" class="btn btn-secondary">
+                            <i class="fas fa-download"></i> 模板库
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="module-title">风险预警系统</div>
+                    <div class="module-status">● 规划中</div>
+                </div>
+                <div class="module-body">
+                    <p class="module-description">
+                        实时监控分析结果，自动识别高风险案例，
+                        提供智能预警和风险等级评估。
+                    </p>
+                    <div class="module-actions">
+                        <a href="#" class="btn btn-primary">
+                            <i class="fas fa-bell"></i> 预警设置
+                        </a>
+                        <a href="#" class="btn btn-secondary">
+                            <i class="fas fa-chart-pie"></i> 风险统计
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="module-title">数据管理中心</div>
+                    <div class="module-status">● 运行中</div>
+                </div>
+                <div class="module-body">
+                    <p class="module-description">
+                        安全存储和管理所有分析数据，提供数据备份、
+                        历史查询、统计分析等综合数据服务。
+                    </p>
+                    <div class="module-actions">
+                        <a href="#" class="btn btn-primary">
+                            <i class="fas fa-search"></i> 数据查询
+                        </a>
+                        <a href="#" class="btn btn-secondary">
+                            <i class="fas fa-download"></i> 数据导出
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="module-title">系统配置中心</div>
+                    <div class="module-status">● 运行中</div>
+                </div>
+                <div class="module-body">
+                    <p class="module-description">
+                        系统参数配置、用户权限管理、API接口设置、
+                        性能优化等全方位系统管理功能。
+                    </p>
+                    <div class="module-actions">
+                        <a href="#" class="btn btn-primary">
+                            <i class="fas fa-sliders-h"></i> 参数配置
+                        </a>
+                        <a href="#" class="btn btn-secondary">
+                            <i class="fas fa-users-cog"></i> 用户管理
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 侧边栏折叠功能
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const toggleIcon = document.getElementById('toggleIcon');
+        const mainContent = document.getElementById('mainContent');
+        const navbar = document.getElementById('navbar');
+
+        let isCollapsed = false;
+
+        sidebarToggle.addEventListener('click', function() {
+            isCollapsed = !isCollapsed;
+            
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-collapsed');
+                navbar.classList.remove('sidebar-expanded');
+                navbar.classList.add('sidebar-collapsed');
+                toggleIcon.classList.remove('fa-chevron-left');
+                toggleIcon.classList.add('fa-chevron-right');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+                navbar.classList.remove('sidebar-collapsed');
+                navbar.classList.add('sidebar-expanded');
+                toggleIcon.classList.remove('fa-chevron-right');
+                toggleIcon.classList.add('fa-chevron-left');
+            }
+        });
+
+        // 初始状态设置
+        document.addEventListener('DOMContentLoaded', function() {
+            navbar.classList.add('sidebar-expanded');
+        });
+
+        // 移动端侧边栏控制
+        function toggleMobileSidebar() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('mobile-open');
+            }
+        }
+
+        // 响应式处理
+        window.addEventListener('resize', function() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+                navbar.classList.remove('sidebar-expanded', 'sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('mobile-open');
+                if (!isCollapsed) {
+                    navbar.classList.add('sidebar-expanded');
+                } else {
+                    navbar.classList.add('sidebar-collapsed');
+                }
+            }
+        });
+
+        // 侧边栏菜单项点击效果
+        document.querySelectorAll('.sidebar-item a').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // 移除所有active类
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                // 添加active类到当前项
+                this.closest('.sidebar-item').classList.add('active');
+            });
+        });
+
+        // 实时更新数据（模拟）
+        function updateStats() {
+            const processedFiles = document.getElementById('processedFiles');
+            const activeUsers = document.getElementById('activeUsers');
+            
+            // 模拟数据更新
+            setInterval(() => {
+                const currentFiles = parseInt(processedFiles.textContent.replace(',', ''));
+                const currentUsers = parseInt(activeUsers.textContent);
+                
+                // 随机增加文件数
+                if (Math.random() > 0.7) {
+                    processedFiles.textContent = (currentFiles + Math.floor(Math.random() * 3) + 1).toLocaleString();
+                }
+                
+                // 随机变化用户数
+                const userChange = Math.floor(Math.random() * 5) - 2; // -2 to +2
+                const newUsers = Math.max(150, currentUsers + userChange);
+                activeUsers.textContent = newUsers;
+            }, 10000); // 每10秒更新一次
+        }
+
+        // 启动实时更新
+        updateStats();
+
+        // 卡片悬停效果增强
+        document.querySelectorAll('.stat-card, .module-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // 添加移动端菜单切换按钮（如果需要）
+        if (window.innerWidth <= 768) {
+            const menuButton = document.createElement('button');
+            menuButton.innerHTML = '<i class="fas fa-bars"></i>';
+            menuButton.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                background: #3498db;
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 5px;
+                z-index: 1002;
+                cursor: pointer;
+            `;
+            menuButton.addEventListener('click', toggleMobileSidebar);
+            document.body.appendChild(menuButton);
+        }
+    </script>
+
+</body>
+</html>

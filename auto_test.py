@@ -104,11 +104,12 @@ class AutoTestRunner:
         
         print(f"📊 文件总大小: {total_size / 1024 / 1024:.2f} MB")
         
-        if total_size > max_size:
-            print(f"⚠️  文件总大小超过限制，将进行分批上传...")
-            return self._upload_files_in_batches(pdf_files, max_size)
-        else:
-            return self._upload_files_single_batch(pdf_files)
+        # if total_size > max_size:
+        #     print(f"⚠️  文件总大小超过限制，将进行分批上传...")
+        #     return self._upload_files_in_batches(pdf_files, max_size)
+        # else:
+        #     return self._upload_files_single_batch(pdf_files)
+        return self._upload_files_single_batch(pdf_files)
     
     def _upload_files_single_batch(self, pdf_files):
         """单批上传文件"""
@@ -584,11 +585,11 @@ class AutoTestRunner:
 def main():
     """主函数"""
     parser = argparse.ArgumentParser(description='PDF自动化测试工具')
-    parser.add_argument('--pdf_path', default = "data/档案3/温州酯源化工有限公司", help='PDF文件路径（文件或文件夹）')
+    parser.add_argument('--pdf_path', default = "data/档案3/杭州全顺纺织有限公司  1", help='PDF文件路径（文件或文件夹）')
     parser.add_argument('--url', default='http://localhost:5500', help='Web应用URL（默认: http://localhost:5000）')
     parser.add_argument('--output', default='test_results', help='输出目录（默认: test_results）')
-    parser.add_argument('--k-pages', type=int, default=10, help='每K页合并为一个分析单元（默认: 5）')
-    
+    parser.add_argument('--k-pages', type=int, default=30, help='每K页合并为一个分析单元（默认: 25）')
+
     args = parser.parse_args()
     # 检查PDF路径是否存在
     if not os.path.exists(args.pdf_path):
