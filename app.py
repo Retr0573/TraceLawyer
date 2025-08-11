@@ -18,16 +18,19 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 RESULTS_FOLDER = 'results'
 DOWNLOADS_FOLDER = 'downloads'
-ALLOWED_EXTENSIONS = {'pdf'}
+OCR_RESULTS_FOLDER = 'ocr_results'
+ALLOWED_EXTENSIONS = {'pdf', 'txt', 'json'}
 
 # 确保文件夹存在
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 os.makedirs(DOWNLOADS_FOLDER, exist_ok=True)
+os.makedirs(OCR_RESULTS_FOLDER, exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULTS_FOLDER'] = RESULTS_FOLDER
 app.config['DOWNLOADS_FOLDER'] = DOWNLOADS_FOLDER
+app.config['OCR_RESULTS_FOLDER'] = OCR_RESULTS_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # max file size
 
 # 存储处理状态和结果
@@ -39,6 +42,55 @@ analysis_results = {}  # 新增：存储分析结果
 def allowed_file(filename):
     """检查文件扩展名是否允许"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def save_ocr_results(task_id, pdf_results_data):
+    """保存OCR识别结果为JSON文件"""
+    try:
+        # 构建保存的数据结构
+        save_data = {
+            'task_id': task_id,
+            'timestamp': datetime.now().isoformat(),
+            'ocr_results': pdf_results_data
+        }
+        
+        # 生成文件名
+        filename = f"ocr_results_{task_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        file_path = os.path.join(app.config['OCR_RESULTS_FOLDER'], filename)
+        
+        # 保存为JSON文件
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(save_data, f, ensure_ascii=False, indent=2)
+        
+        return filename, file_path
+        
+    except Exception as e:
+        print(f"保存OCR结果失败: {e}")
+        return None, None
+
+
+def load_text_file_content(file_path):
+    """加载TXT或JSON文件内容"""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            if file_path.endswith('.json'):
+                data = json.load(f)
+                # 如果是OCR结果格式
+                if 'ocr_results' in data:
+                    return data['ocr_results']
+                # 如果是页面数组格式
+                elif isinstance(data, list):
+                    return [{'pages': data, 'filename': os.path.basename(file_path)}]
+                else:
+                    return data
+            else:  # TXT文件
+                content = f.read()
+                # 将TXT内容按双换行符分割为页面
+                pages = [page.strip() for page in content.split('\n\n') if page.strip()]
+                return [{'pages': pages, 'filename': os.path.basename(file_path)}]
+    except Exception as e:
+        print(f"加载文本文件失败: {e}")
+        return None
 
 
 def generate_word_document(content, task_id):
@@ -208,6 +260,15 @@ def process_pdfs_async(task_id, pdf_files):
         
         processing_status[task_id]['status'] = 'completed'
         
+        # 自动保存OCR结果
+        try:
+            ocr_filename, ocr_filepath = save_ocr_results(task_id, pdf_results[task_id])
+            if ocr_filename:
+                processing_status[task_id]['ocr_file'] = ocr_filename
+                print(f"OCR结果已自动保存: {ocr_filename}")
+        except Exception as e:
+            print(f"自动保存OCR结果失败: {e}")
+        
     except Exception as e:
         processing_status[task_id] = {'status': 'error', 'error': str(e)}
 
@@ -343,7 +404,7 @@ def serve_logo():
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
-    """上传PDF文件"""
+    """上传PDF/TXT/JSON文件"""
     if 'files' not in request.files:
         return jsonify({'error': '没有选择文件'}), 400
     
@@ -354,10 +415,10 @@ def upload_files():
     # 生成任务ID
     task_id = str(uuid.uuid4())
     uploaded_files = []
+    text_files = []
     
     for file in files:
         if file and allowed_file(file.filename):
-            # filename = secure_filename(file.filename)
             filename = file.filename
             # 添加时间戳避免文件名冲突
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -365,20 +426,54 @@ def upload_files():
             
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
-            uploaded_files.append(filename)
+            
+            # 检查文件类型
+            if filename.lower().endswith(('.txt', '.json')):
+                text_files.append(filename)
+            else:
+                uploaded_files.append(filename)
     
-    if not uploaded_files:
-        return jsonify({'error': '没有有效的PDF文件'}), 400
+    if not uploaded_files and not text_files:
+        return jsonify({'error': '没有有效的文件'}), 400
     
-    # 启动异步处理
-    thread = threading.Thread(target=process_pdfs_async, args=(task_id, uploaded_files))
-    thread.start()
+    # 如果有文本文件，直接处理
+    if text_files:
+        try:
+            pdf_results[task_id] = []
+            for text_file in text_files:
+                text_path = os.path.join(app.config['UPLOAD_FOLDER'], text_file)
+                content = load_text_file_content(text_path)
+                if content:
+                    pdf_results[task_id].extend(content)
+                
+                # 处理完后删除文本文件
+                try:
+                    os.remove(text_path)
+                except:
+                    pass
+            
+            processing_status[task_id] = {'status': 'completed', 'progress': 1, 'total': 1, 'file_type': 'text'}
+            
+            return jsonify({
+                'task_id': task_id,
+                'message': f'已加载 {len(text_files)} 个文本文件',
+                'files': text_files,
+                'file_type': 'text'
+            })
+        except Exception as e:
+            return jsonify({'error': f'处理文本文件失败: {str(e)}'}), 500
     
-    return jsonify({
-        'task_id': task_id,
-        'message': f'开始处理 {len(uploaded_files)} 个PDF文件',
-        'files': uploaded_files
-    })
+    # 如果有PDF文件，启动异步OCR处理
+    if uploaded_files:
+        thread = threading.Thread(target=process_pdfs_async, args=(task_id, uploaded_files))
+        thread.start()
+        
+        return jsonify({
+            'task_id': task_id,
+            'message': f'开始处理 {len(uploaded_files)} 个PDF文件',
+            'files': uploaded_files,
+            'file_type': 'pdf'
+        })
 
 
 @app.route('/status/<task_id>')
@@ -565,6 +660,35 @@ def download_word(task_id):
         )
     except FileNotFoundError:
         return jsonify({'error': '文件不存在'}), 404
+
+
+@app.route('/download_ocr/<task_id>')
+def download_ocr_results(task_id):
+    """下载OCR识别结果"""
+    if task_id not in processing_status:
+        return jsonify({'error': '任务不存在'}), 404
+    
+    status = processing_status[task_id]
+    if 'ocr_file' not in status:
+        # 如果没有自动保存的文件，尝试生成一个
+        if task_id in pdf_results:
+            ocr_filename, ocr_filepath = save_ocr_results(task_id, pdf_results[task_id])
+            if not ocr_filename:
+                return jsonify({'error': 'OCR结果生成失败'}), 500
+        else:
+            return jsonify({'error': 'OCR结果不存在'}), 404
+    else:
+        ocr_filename = status['ocr_file']
+    
+    try:
+        return send_from_directory(
+            app.config['OCR_RESULTS_FOLDER'], 
+            ocr_filename, 
+            as_attachment=True,
+            download_name=ocr_filename
+        )
+    except FileNotFoundError:
+        return jsonify({'error': 'OCR结果文件不存在'}), 404
 
 
 @app.route('/analysis_info/<task_id>')

@@ -178,6 +178,53 @@
             color: #2c3e50;
         }
 
+        .file-type-selection {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #ecf0f1;
+        }
+
+        .file-type-options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .file-type-options input[type="radio"] {
+            display: none;
+        }
+
+        .file-type-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: white;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #34495e;
+        }
+
+        .file-type-label:hover {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+
+        .file-type-options input[type="radio"]:checked + .file-type-label {
+            border-color: #3498db;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        .file-type-label i {
+            font-size: 1.1rem;
+        }
+
         .upload-area {
             border: 3px dashed #3498db;
             border-radius: 15px;
@@ -944,10 +991,26 @@
                     <i class="fas fa-cloud-upload-alt card-icon"></i>
                     <h2 class="card-title">文档上传</h2>
                 </div>
+                
+                <!-- 文件类型选择 -->
+                <div class="file-type-selection">
+                    <div class="file-type-options">
+                        <input type="radio" id="pdfType" name="fileType" value="pdf" checked>
+                        <label for="pdfType" class="file-type-label">
+                            <i class="fas fa-file-pdf"></i> PDF文件 (需OCR识别)
+                        </label>
+                        
+                        <input type="radio" id="textType" name="fileType" value="text">
+                        <label for="textType" class="file-type-label">
+                            <i class="fas fa-file-alt"></i> 文本文件 (TXT/JSON)
+                        </label>
+                    </div>
+                </div>
+                
                 <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-                    <i class="fas fa-file-pdf upload-icon"></i>
-                    <div class="upload-text">点击或拖拽上传PDF文件</div>
-                    <div class="upload-hint">支持多文件批量上传，单个文件最大500MB</div>
+                    <i class="fas fa-file-pdf upload-icon" id="uploadIcon"></i>
+                    <div class="upload-text" id="uploadText">点击或拖拽上传PDF文件</div>
+                    <div class="upload-hint" id="uploadHint">支持多文件批量上传，单个文件最大500MB</div>
                     <input type="file" id="fileInput" multiple accept=".pdf">
                 </div>
                 
@@ -967,6 +1030,9 @@
                     <button class="btn btn-secondary" id="clearBtn" style="display: none;">
                         <i class="fas fa-trash"></i> 清空列表
                     </button>
+                    <button class="btn btn-secondary" id="downloadOcrBtn" style="display: none;">
+                        <i class="fas fa-download"></i> 下载OCR结果
+                    </button>
                 </div>
             </div>
 
@@ -979,8 +1045,8 @@
                 
                 <div class="analysis-controls">
                     <div class="control-group">
-                        <label for="kPages">页面合并数:</label>
-                        <input type="number" id="kPages" value="5" min="1" max="20">
+                        <label for="kPages">页面合并数(每多少页合并一段):</label>
+                        <input type="number" id="kPages" value="20" min="1" max="20">
                     </div>
                     <div class="control-group">
                         <label for="analysisMode">分析模式:</label>
@@ -1091,9 +1157,16 @@
             const uploadArea = document.querySelector('.upload-area');
             const uploadBtn = document.getElementById('uploadBtn');
             const clearBtn = document.getElementById('clearBtn');
+            const downloadOcrBtn = document.getElementById('downloadOcrBtn');
             const streamAnalyzeBtn = document.getElementById('streamAnalyzeBtn');
             const downloadBtn = document.getElementById('downloadBtn');
             const copyBtn = document.getElementById('copyBtn');
+            const fileTypeRadios = document.querySelectorAll('input[name="fileType"]');
+
+            // 文件类型切换
+            fileTypeRadios.forEach(radio => {
+                radio.addEventListener('change', handleFileTypeChange);
+            });
 
             // 文件选择
             fileInput.addEventListener('change', handleFileSelect);
@@ -1106,9 +1179,33 @@
             // 按钮事件
             uploadBtn.addEventListener('click', uploadFiles);
             clearBtn.addEventListener('click', clearFiles);
+            downloadOcrBtn.addEventListener('click', downloadOcrResults);
             streamAnalyzeBtn.addEventListener('click', () => analyzeFiles(true));
             downloadBtn.addEventListener('click', downloadReport);
             copyBtn.addEventListener('click', copyResults);
+        }
+
+        function handleFileTypeChange(event) {
+            const fileType = event.target.value;
+            const fileInput = document.getElementById('fileInput');
+            const uploadIcon = document.getElementById('uploadIcon');
+            const uploadText = document.getElementById('uploadText');
+            const uploadHint = document.getElementById('uploadHint');
+            
+            if (fileType === 'pdf') {
+                fileInput.accept = '.pdf';
+                uploadIcon.className = 'fas fa-file-pdf upload-icon';
+                uploadText.textContent = '点击或拖拽上传PDF文件';
+                uploadHint.textContent = '支持多文件批量上传，单个文件最大500MB';
+            } else {
+                fileInput.accept = '.txt,.json';
+                uploadIcon.className = 'fas fa-file-alt upload-icon';
+                uploadText.textContent = '点击或拖拽上传文本文件';
+                uploadHint.textContent = '支持TXT和JSON格式，JSON格式应为页面数组或OCR结果格式';
+            }
+            
+            // 清空当前选择的文件
+            clearFiles();
         }
 
         function handleFileSelect(event) {
@@ -1128,12 +1225,42 @@
         function handleDrop(event) {
             event.preventDefault();
             event.currentTarget.classList.remove('drag-over');
-            const files = Array.from(event.dataTransfer.files).filter(file => file.type === 'application/pdf');
+            
+            const fileType = document.querySelector('input[name="fileType"]:checked').value;
+            let files;
+            
+            if (fileType === 'pdf') {
+                files = Array.from(event.dataTransfer.files).filter(file => file.type === 'application/pdf');
+            } else {
+                files = Array.from(event.dataTransfer.files).filter(file => 
+                    file.name.toLowerCase().endsWith('.txt') || 
+                    file.name.toLowerCase().endsWith('.json')
+                );
+            }
+            
             addFiles(files);
         }
 
         function addFiles(files) {
-            selectedFiles = [...selectedFiles, ...files];
+            // 根据当前选择的文件类型过滤文件
+            const fileType = document.querySelector('input[name="fileType"]:checked').value;
+            let validFiles;
+            
+            if (fileType === 'pdf') {
+                validFiles = files.filter(file => file.type === 'application/pdf');
+            } else {
+                validFiles = files.filter(file => 
+                    file.name.toLowerCase().endsWith('.txt') || 
+                    file.name.toLowerCase().endsWith('.json')
+                );
+            }
+            
+            if (validFiles.length !== files.length) {
+                const invalidCount = files.length - validFiles.length;
+                updateStatus(`已过滤掉 ${invalidCount} 个不支持的文件类型`, 'info');
+            }
+            
+            selectedFiles = [...selectedFiles, ...validFiles];
             updateFileList();
             updateButtons();
         }
@@ -1145,8 +1272,19 @@
             selectedFiles.forEach((file, index) => {
                 const fileItem = document.createElement('div');
                 fileItem.className = 'file-item';
+                
+                // 根据文件类型显示不同图标
+                let fileIcon = 'fas fa-file';
+                if (file.name.toLowerCase().endsWith('.pdf')) {
+                    fileIcon = 'fas fa-file-pdf';
+                } else if (file.name.toLowerCase().endsWith('.txt')) {
+                    fileIcon = 'fas fa-file-alt';
+                } else if (file.name.toLowerCase().endsWith('.json')) {
+                    fileIcon = 'fas fa-file-code';
+                }
+                
                 fileItem.innerHTML = `
-                    <i class="fas fa-file-pdf file-icon"></i>
+                    <i class="${fileIcon} file-icon"></i>
                     <span class="file-name">${file.name}</span>
                     <span class="file-size">${formatFileSize(file.size)}</span>
                     <button onclick="removeFile(${index})" style="background: none; border: none; color: #e74c3c; cursor: pointer;">
@@ -1169,12 +1307,18 @@
             updateButtons();
             document.getElementById('fileInput').value = '';
             
+            // 隐藏OCR下载按钮
+            const downloadOcrBtn = document.getElementById('downloadOcrBtn');
+            if (downloadOcrBtn) {
+                downloadOcrBtn.style.display = 'none';
+            }
+            
             // 重置状态并禁用分析按钮
             ocrCompleted = false;
             documentContents = [];
             currentTaskId = null;
             disableAnalysisButtons();
-            updateStatus('请先上传PDF文件开始处理', 'info');
+            updateStatus('请先上传文件开始处理', 'info');
         }
 
         function updateButtons() {
@@ -1220,8 +1364,26 @@
                 
                 if (result.task_id) {
                     currentTaskId = result.task_id;
-                    updateStatus(`文件上传成功，开始OCR处理 ${result.files.length} 个文件`, 'info');
-                    monitorOCRProgress();
+                    
+                    if (result.file_type === 'text') {
+                        // 文本文件直接处理完成
+                        updateStatus(`文本文件加载成功，共 ${result.files.length} 个文件`, 'success');
+                        showProgress(false);
+                        ocrCompleted = true;
+                        
+                        // 获取处理结果
+                        const statusResponse = await fetch(`/status/${currentTaskId}`);
+                        const statusResult = await statusResponse.json();
+                        
+                        if (statusResult.results) {
+                            await loadDocumentPreview(statusResult.results);
+                            enableAnalysisButtons();
+                        }
+                    } else {
+                        // PDF文件需要OCR处理
+                        updateStatus(`文件上传成功，开始OCR处理 ${result.files.length} 个文件`, 'info');
+                        monitorOCRProgress();
+                    }
                 } else {
                     updateStatus('上传失败: ' + (result.error || '未知错误'), 'error');
                     showProgress(false);
@@ -1275,6 +1437,12 @@
                         updateStatus('OCR处理完成，正在生成预览...', 'success');
                         showProgress(false);
                         ocrCompleted = true;
+                        
+                        // 显示OCR下载按钮
+                        const downloadOcrBtn = document.getElementById('downloadOcrBtn');
+                        if (downloadOcrBtn) {
+                            downloadOcrBtn.style.display = 'inline-block';
+                        }
                         
                         // 获取并显示文档内容
                         await loadDocumentPreview(status.results);
@@ -1532,6 +1700,12 @@
         function downloadReport() {
             if (currentTaskId) {
                 window.open(`/download/${currentTaskId}`, '_blank');
+            }
+        }
+
+        function downloadOcrResults() {
+            if (currentTaskId) {
+                window.open(`/download_ocr/${currentTaskId}`, '_blank');
             }
         }
 
