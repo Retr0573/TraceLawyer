@@ -35,6 +35,7 @@ test_results/
 temp_images/
 downloads/
 uploads/
+data/
 
 # 忽略其他常见的不需要版本控制的文件
 *.bak
