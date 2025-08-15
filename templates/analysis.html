@@ -215,7 +215,7 @@
             background: #e3f2fd;
         }
 
-        .file-type-options input[type="radio"]:checked + .file-type-label {
+        .file-type-options input[type="radio"]:checked+.file-type-label {
             border-color: #3498db;
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
@@ -496,8 +496,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 1; }
+
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
 
         .action-buttons {
@@ -596,8 +603,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .feature-highlight {
@@ -626,7 +638,7 @@
             font-size: 1.8rem;
             border-bottom: 2px solid #f39c12;
             padding-bottom: 8px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         .markdown-content h2 {
@@ -685,7 +697,7 @@
         .markdown-content strong {
             color: #f1c40f;
             font-weight: 700;
-            text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
         }
 
         .markdown-content em {
@@ -711,7 +723,7 @@
             overflow-x: auto;
             margin: 18px 0;
             border-left: 5px solid #3498db;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         .markdown-content pre code {
@@ -749,7 +761,7 @@
             color: #d5dbdb;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         .markdown-content th,
@@ -784,7 +796,7 @@
 
         .markdown-content a:hover {
             color: #85c1e9;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         .markdown-content hr {
@@ -877,7 +889,7 @@
             margin-bottom: 15px;
             border-radius: 8px;
             border: 1px solid #e9ecef;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .preview-text .page-header {
@@ -991,7 +1003,7 @@
                     <i class="fas fa-cloud-upload-alt card-icon"></i>
                     <h2 class="card-title">文档上传</h2>
                 </div>
-                
+
                 <!-- 文件类型选择 -->
                 <div class="file-type-selection">
                     <div class="file-type-options">
@@ -999,30 +1011,30 @@
                         <label for="pdfType" class="file-type-label">
                             <i class="fas fa-file-pdf"></i> PDF文件 (需OCR识别)
                         </label>
-                        
+
                         <input type="radio" id="textType" name="fileType" value="text">
                         <label for="textType" class="file-type-label">
                             <i class="fas fa-file-alt"></i> 文本文件 (TXT/JSON)
                         </label>
                     </div>
                 </div>
-                
+
                 <div class="upload-area" onclick="document.getElementById('fileInput').click()">
                     <i class="fas fa-file-pdf upload-icon" id="uploadIcon"></i>
                     <div class="upload-text" id="uploadText">点击或拖拽上传PDF文件</div>
                     <div class="upload-hint" id="uploadHint">支持多文件批量上传，单个文件最大500MB</div>
                     <input type="file" id="fileInput" multiple accept=".pdf">
                 </div>
-                
+
                 <div class="file-list" id="fileList"></div>
-                
+
                 <div class="progress-container" id="progressContainer">
                     <div class="progress-bar">
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
                     <div class="progress-text" id="progressText">准备上传...</div>
                 </div>
-                
+
                 <div class="action-buttons">
                     <button class="btn btn-primary" id="uploadBtn" style="display: none;">
                         <i class="fas fa-upload"></i> 开始上传
@@ -1042,7 +1054,7 @@
                     <i class="fas fa-brain card-icon"></i>
                     <h2 class="card-title">AI分析控制</h2>
                 </div>
-                
+
                 <div class="analysis-controls">
                     <div class="control-group">
                         <label for="kPages">页面合并数(每多少页合并一段):</label>
@@ -1057,14 +1069,14 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <div id="statusArea">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle"></i>
                         请先上传PDF文件开始处理
                     </div>
                 </div>
-                
+
                 <div class="action-buttons">
                     <button class="btn btn-primary" id="streamAnalyzeBtn" disabled title="请先上传并处理PDF文件">
                         <i class="fas fa-brain"></i> 开始AI分析
@@ -1085,7 +1097,7 @@
                     </button>
                 </div>
             </div>
-            
+
             <div class="preview-content" id="previewContent">
                 <div class="preview-tabs">
                     <button class="preview-tab active" onclick="switchPreviewTab('summary')">
@@ -1113,17 +1125,17 @@
                 <i class="fas fa-chart-line card-icon"></i>
                 <h2 class="card-title">分析结果</h2>
             </div>
-            
+
             <div class="typing-indicator" id="typingIndicator">
                 <span>AI正在分析中...</span>
             </div>
-            
+
             <div class="results-area">
                 <div class="results-content" id="resultsContent">
                     <p style="text-align: center; color: #bdc3c7; font-style: italic;">分析结果将在此处显示...</p>
                 </div>
             </div>
-            
+
             <div class="action-buttons">
                 <button class="btn btn-primary" id="downloadBtn" style="display: none;">
                     <i class="fas fa-download"></i> 下载Word报告
@@ -1146,7 +1158,7 @@
         let documentContents = [];
 
         // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             initializeEventListeners();
             updateProcessedCount();
             disableAnalysisButtons(); // 初始状态禁用分析按钮
@@ -1170,12 +1182,12 @@
 
             // 文件选择
             fileInput.addEventListener('change', handleFileSelect);
-            
+
             // 拖拽上传
             uploadArea.addEventListener('dragover', handleDragOver);
             uploadArea.addEventListener('dragleave', handleDragLeave);
             uploadArea.addEventListener('drop', handleDrop);
-            
+
             // 按钮事件
             uploadBtn.addEventListener('click', uploadFiles);
             clearBtn.addEventListener('click', clearFiles);
@@ -1191,7 +1203,7 @@
             const uploadIcon = document.getElementById('uploadIcon');
             const uploadText = document.getElementById('uploadText');
             const uploadHint = document.getElementById('uploadHint');
-            
+
             if (fileType === 'pdf') {
                 fileInput.accept = '.pdf';
                 uploadIcon.className = 'fas fa-file-pdf upload-icon';
@@ -1203,7 +1215,7 @@
                 uploadText.textContent = '点击或拖拽上传文本文件';
                 uploadHint.textContent = '支持TXT和JSON格式，JSON格式应为页面数组或OCR结果格式';
             }
-            
+
             // 清空当前选择的文件
             clearFiles();
         }
@@ -1225,19 +1237,19 @@
         function handleDrop(event) {
             event.preventDefault();
             event.currentTarget.classList.remove('drag-over');
-            
+
             const fileType = document.querySelector('input[name="fileType"]:checked').value;
             let files;
-            
+
             if (fileType === 'pdf') {
                 files = Array.from(event.dataTransfer.files).filter(file => file.type === 'application/pdf');
             } else {
-                files = Array.from(event.dataTransfer.files).filter(file => 
-                    file.name.toLowerCase().endsWith('.txt') || 
+                files = Array.from(event.dataTransfer.files).filter(file =>
+                    file.name.toLowerCase().endsWith('.txt') ||
                     file.name.toLowerCase().endsWith('.json')
                 );
             }
-            
+
             addFiles(files);
         }
 
@@ -1245,21 +1257,21 @@
             // 根据当前选择的文件类型过滤文件
             const fileType = document.querySelector('input[name="fileType"]:checked').value;
             let validFiles;
-            
+
             if (fileType === 'pdf') {
                 validFiles = files.filter(file => file.type === 'application/pdf');
             } else {
-                validFiles = files.filter(file => 
-                    file.name.toLowerCase().endsWith('.txt') || 
+                validFiles = files.filter(file =>
+                    file.name.toLowerCase().endsWith('.txt') ||
                     file.name.toLowerCase().endsWith('.json')
                 );
             }
-            
+
             if (validFiles.length !== files.length) {
                 const invalidCount = files.length - validFiles.length;
                 updateStatus(`已过滤掉 ${invalidCount} 个不支持的文件类型`, 'info');
             }
-            
+
             selectedFiles = [...selectedFiles, ...validFiles];
             updateFileList();
             updateButtons();
@@ -1268,11 +1280,11 @@
         function updateFileList() {
             const fileList = document.getElementById('fileList');
             fileList.innerHTML = '';
-            
+
             selectedFiles.forEach((file, index) => {
                 const fileItem = document.createElement('div');
                 fileItem.className = 'file-item';
-                
+
                 // 根据文件类型显示不同图标
                 let fileIcon = 'fas fa-file';
                 if (file.name.toLowerCase().endsWith('.pdf')) {
@@ -1282,7 +1294,7 @@
                 } else if (file.name.toLowerCase().endsWith('.json')) {
                     fileIcon = 'fas fa-file-code';
                 }
-                
+
                 fileItem.innerHTML = `
                     <i class="${fileIcon} file-icon"></i>
                     <span class="file-name">${file.name}</span>
@@ -1306,13 +1318,13 @@
             updateFileList();
             updateButtons();
             document.getElementById('fileInput').value = '';
-            
+
             // 隐藏OCR下载按钮
             const downloadOcrBtn = document.getElementById('downloadOcrBtn');
             if (downloadOcrBtn) {
                 downloadOcrBtn.style.display = 'none';
             }
-            
+
             // 重置状态并禁用分析按钮
             ocrCompleted = false;
             documentContents = [];
@@ -1325,7 +1337,7 @@
             const uploadBtn = document.getElementById('uploadBtn');
             const clearBtn = document.getElementById('clearBtn');
             const hasFiles = selectedFiles.length > 0;
-            
+
             uploadBtn.style.display = hasFiles ? 'inline-block' : 'none';
             clearBtn.style.display = hasFiles ? 'inline-block' : 'none';
         }
@@ -1348,7 +1360,7 @@
 
             showProgress(true);
             updateStatus('正在上传文件...', 'info');
-            
+
             // 重置状态
             ocrCompleted = false;
             documentContents = [];
@@ -1361,20 +1373,20 @@
                 });
 
                 const result = await response.json();
-                
+
                 if (result.task_id) {
                     currentTaskId = result.task_id;
-                    
+
                     if (result.file_type === 'text') {
                         // 文本文件直接处理完成
                         updateStatus(`文本文件加载成功，共 ${result.files.length} 个文件`, 'success');
                         showProgress(false);
                         ocrCompleted = true;
-                        
+
                         // 获取处理结果
                         const statusResponse = await fetch(`/status/${currentTaskId}`);
                         const statusResult = await statusResponse.json();
-                        
+
                         if (statusResult.results) {
                             await loadDocumentPreview(statusResult.results);
                             enableAnalysisButtons();
@@ -1402,7 +1414,7 @@
         function updateProgress(progress, total, text) {
             const progressFill = document.getElementById('progressFill');
             const progressText = document.getElementById('progressText');
-            
+
             const percentage = total > 0 ? (progress / total) * 100 : 0;
             progressFill.style.width = percentage + '%';
             progressText.textContent = text || `处理进度: ${progress}/${total}`;
@@ -1422,12 +1434,12 @@
             if (!currentTaskId) return;
 
             showProgress(true);
-            
+
             const checkProgress = async () => {
                 try {
                     const response = await fetch(`/status/${currentTaskId}`);
                     const status = await response.json();
-                    
+
                     if (status.status === 'processing') {
                         updateProgress(status.progress, status.total, `OCR处理进度: ${status.progress}/${status.total}`);
                         updateStatus(`正在进行OCR识别 (${status.progress}/${status.total})`, 'info');
@@ -1437,13 +1449,13 @@
                         updateStatus('OCR处理完成，正在生成预览...', 'success');
                         showProgress(false);
                         ocrCompleted = true;
-                        
+
                         // 显示OCR下载按钮
                         const downloadOcrBtn = document.getElementById('downloadOcrBtn');
                         if (downloadOcrBtn) {
                             downloadOcrBtn.style.display = 'inline-block';
                         }
-                        
+
                         // 获取并显示文档内容
                         await loadDocumentPreview(status.results);
                         enableAnalysisButtons();
@@ -1457,25 +1469,25 @@
                     setTimeout(checkProgress, 2000);
                 }
             };
-            
+
             checkProgress();
         }
 
         async function loadDocumentPreview(results) {
             try {
                 documentContents = results;
-                
+
                 // 显示预览区域
                 document.getElementById('previewSection').style.display = 'block';
-                
+
                 // 生成摘要预览
                 generatePreviewSummary();
-                
+
                 // 生成完整内容预览
                 generateFullPreview();
-                
+
                 updateStatus('文档预览已生成，可以开始AI分析', 'success');
-                
+
             } catch (error) {
                 console.error('生成文档预览时出错:', error);
                 updateStatus('预览生成失败，但可以继续分析', 'error');
@@ -1484,18 +1496,18 @@
 
         function generatePreviewSummary() {
             const summaryPanel = document.getElementById('previewSummary').querySelector('.preview-text');
-            
+
             let totalPages = 0;
             let totalChars = 0;
             let filesList = [];
-            
+
             documentContents.forEach(doc => {
                 if (doc.pages) {
                     const pageCount = doc.pages.length;
                     const charCount = doc.pages.join('').length;
                     totalPages += pageCount;
                     totalChars += charCount;
-                    
+
                     filesList.push({
                         name: doc.filename,
                         pages: pageCount,
@@ -1504,7 +1516,7 @@
                     });
                 }
             });
-            
+
             let summaryHTML = `
                 <div class="document-info">
                     <h3><i class="fas fa-info-circle"></i> 文档统计信息</h3>
@@ -1516,7 +1528,7 @@
                 
                 <h3><i class="fas fa-list"></i> 文件列表</h3>
             `;
-            
+
             filesList.forEach((file, index) => {
                 const statusIcon = file.hasError ? '<i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i>' : '<i class="fas fa-check-circle" style="color: #27ae60;"></i>';
                 summaryHTML += `
@@ -1529,24 +1541,24 @@
                     </div>
                 `;
             });
-            
+
             summaryPanel.innerHTML = summaryHTML;
-            
+
             // 更新预览信息
             document.getElementById('previewInfo').textContent = `${documentContents.length} 个文件，共 ${totalPages} 页`;
         }
 
         function generateFullPreview() {
             const fullPanel = document.getElementById('previewFull').querySelector('.preview-text');
-            
+
             let fullHTML = '';
-            
+
             documentContents.forEach((doc, docIndex) => {
                 if (doc.pages) {
                     fullHTML += `
                         <h3><i class="fas fa-file-pdf"></i> ${doc.filename}</h3>
                     `;
-                    
+
                     doc.pages.forEach((pageContent, pageIndex) => {
                         const preview = pageContent.length > 500 ? pageContent.substring(0, 500) + '...' : pageContent;
                         fullHTML += `
@@ -1567,7 +1579,7 @@
                     `;
                 }
             });
-            
+
             fullPanel.innerHTML = fullHTML;
         }
 
@@ -1591,15 +1603,15 @@
                 }
                 return;
             }
-            
+
             isAnalyzing = true;
             const kPages = parseInt(document.getElementById('kPages').value) || 5;
-            
+
             document.getElementById('analysisSection').style.display = 'block';
             document.getElementById('resultsContent').innerHTML = '';
-            
+
             updateStatus('正在进行AI分析...', 'info');
-            
+
             try {
                 await analyzeWithStream(kPages);
             } catch (error) {
@@ -1619,7 +1631,7 @@
 
         async function analyzeWithStream(kPages) {
             document.getElementById('typingIndicator').style.display = 'flex';
-            
+
             const response = await fetch('/analyze_stream', {
                 method: 'POST',
                 headers: {
@@ -1646,7 +1658,7 @@
                     if (line.startsWith('data: ')) {
                         try {
                             const data = JSON.parse(line.slice(6));
-                            
+
                             if (data.type === 'content') {
                                 fullContent += data.data;
                                 displayResults(fullContent, true);
@@ -1671,7 +1683,7 @@
 
         function displayResults(content, isStreaming = false) {
             const resultsContent = document.getElementById('resultsContent');
-            
+
             // 使用marked.js渲染Markdown
             if (typeof marked !== 'undefined') {
                 resultsContent.innerHTML = `<div class="markdown-content">${marked.parse(content)}</div>`;
@@ -1679,7 +1691,7 @@
                 // 如果marked.js未加载，使用简单的文本显示
                 resultsContent.innerHTML = `<pre style="white-space: pre-wrap; color: #ecf0f1;">${content}</pre>`;
             }
-            
+
             // 滚动到底部
             if (isStreaming) {
                 resultsContent.scrollTop = resultsContent.scrollHeight;
@@ -1689,7 +1701,7 @@
         function copyResults() {
             const resultsContent = document.getElementById('resultsContent');
             const text = resultsContent.textContent || resultsContent.innerText;
-            
+
             navigator.clipboard.writeText(text).then(() => {
                 updateStatus('结果已复制到剪贴板', 'success');
             }).catch(() => {
@@ -1730,7 +1742,7 @@
                 tab.classList.remove('active');
             });
             document.querySelector(`.preview-tab[onclick="switchPreviewTab('${tabName}')"]`).classList.add('active');
-            
+
             // 切换内容面板
             document.querySelectorAll('.preview-panel').forEach(panel => {
                 panel.classList.remove('active');
@@ -1742,7 +1754,7 @@
             const previewSection = document.getElementById('previewSection');
             const toggleBtn = document.getElementById('togglePreviewBtn');
             const previewContent = document.getElementById('previewContent');
-            
+
             if (previewContent.style.display === 'none') {
                 previewContent.style.display = 'block';
                 toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i> 收起';
